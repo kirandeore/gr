@@ -1,14 +1,14 @@
-import { ResumeFormData } from "./../interfaces/resume-form-model";
-import { Form2HtmlService } from "./../services/form-2-html.service";
-import { AfterViewInit, Component, ElementRef, Input, OnInit } from "@angular/core";
-import { interval } from "rxjs";
-import { debounce, startWith } from "rxjs/operators";
-import { FormGroup } from "@angular/forms";
+import { ResumeFormData } from './../interfaces/resume-form-model';
+import { Form2HtmlService } from './../services/form-2-html.service';
+import { AfterViewInit, Component, ElementRef, Input, OnInit } from '@angular/core';
+import { interval } from 'rxjs';
+import { debounce, startWith } from 'rxjs/operators';
+import { FormGroup } from '@angular/forms';
 
 @Component({
-    selector: "app-page",
-    templateUrl: "./page.component.html",
-    styleUrls: ["./page.component.scss"],
+    selector: 'app-page',
+    templateUrl: './page.component.html',
+    styleUrls: ['./page.component.scss'],
 })
 export class PageComponent implements OnInit, AfterViewInit {
     @Input() form: FormGroup;
@@ -34,18 +34,17 @@ export class PageComponent implements OnInit, AfterViewInit {
             .subscribe((formValue: ResumeFormData) => {
                 this.clearNode(this.component);
 
-                let i = 0;
                 this.setupNewPage();
 
                 const elementArray: HTMLElement[] = [];
                 const formElements: HTMLElement[] = this.form2HtmlService.convertForm2HTML(formValue);
                 elementArray.push(...formElements);
 
-                for (i = 0; i < elementArray.length; i++) {
-                    switch (elementArray[i].tagName.toLowerCase()) {
-                        case "ul":
-                        case "ol":
-                            const ulTag = elementArray[i];
+                elementArray.forEach((ele) => {
+                    switch (ele.tagName.toLowerCase()) {
+                        case 'ul':
+                        case 'ol':
+                            const ulTag = ele;
                             const liTags: HTMLElement[] = Array.from(ulTag.children) as HTMLElement[];
                             let ulClone: HTMLElement = ulTag.cloneNode() as HTMLElement;
 
@@ -91,20 +90,20 @@ export class PageComponent implements OnInit, AfterViewInit {
 
                             break;
                         default:
-                            this.currentPlaceholder.appendChild(elementArray[i]);
+                            this.currentPlaceholder.appendChild(ele);
 
                             if (this.isContentOverflown) {
                                 // remove overflown content and reset counter
-                                this.currentPlaceholder.removeChild(elementArray[i]);
-                                i = i > 0 ? i-- : 0;
+                                this.currentPlaceholder.removeChild(ele);
 
                                 // TODO: check spanArray[i] is not greater than any container, or else there will be infinite loop
                                 this.setNewCurrentPlaceholder();
+                                this.currentPlaceholder.appendChild(ele);
                             }
 
                             break;
                     }
-                }
+                });
             });
     }
 
@@ -120,7 +119,7 @@ export class PageComponent implements OnInit, AfterViewInit {
 
     private setupNewPage() {
         this.page = this.createPage();
-        this.contentPlaceholders = this.page.querySelectorAll(".content-placeholder");
+        this.contentPlaceholders = this.page.querySelectorAll('.content-placeholder');
         this.component.appendChild(this.page);
         this.currentPlaceHolderIndex = 0;
         this.currentPlaceholder = this.contentPlaceholders[this.currentPlaceHolderIndex];
@@ -154,7 +153,7 @@ export class PageComponent implements OnInit, AfterViewInit {
     </div>
     `;
 
-        const htmlDoc: Document = new DOMParser().parseFromString(xmlString, "text/html");
+        const htmlDoc: Document = new DOMParser().parseFromString(xmlString, 'text/html');
 
         return htmlDoc.documentElement;
     }
