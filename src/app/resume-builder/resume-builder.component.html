@@ -1,0 +1,49 @@
+<div style="display: flex;">
+  <div>
+    <app-page [form]="parentForm"></app-page>
+  </div>
+  <div>
+    <form [formGroup]="parentForm">
+      <form [formGroup]="parentForm.get('workExpParentForm')">
+        <!-- <form formGroupName="workExpParentForm"> -->
+        <div>
+          <app-text-box name="header"></app-text-box>
+          <button (click)="formService.addNewWorkExperience()">Add</button>
+        </div>
+
+        <ng-container *ngFor="let workExpForm of workExps.controls">
+          <!-- {{ workExpForm.value | json }} -->
+          <form [formGroup]="workExpForm" style="margin-left: 15px; margin-top: 5px;">
+            <!-- <input type="text" formControlName="jobTitle" /> -->
+            <app-text-box name="jobTitle"></app-text-box>
+            <app-text-box name="duration"></app-text-box>
+            <app-text-box name="company"></app-text-box>
+            <app-text-box name="city"></app-text-box>
+            <app-text-box name="state"></app-text-box>
+            <!-- <app-text-area name="description"></app-text-area> -->
+            <quill-editor #editor formControlName="description"></quill-editor>
+          </form>
+          -----------------------
+        </ng-container>
+      </form>
+      ***************************<br />
+      <form [formGroup]="parentForm.get('eduParentForm')">
+        <div>
+          <app-text-box name="header"></app-text-box>
+          <button (click)="formService.addNewEducation()">Add</button>
+        </div>
+        <ng-container *ngFor="let credentialForm of credentials.controls">
+          <form [formGroup]="credentialForm" style="margin-left: 15px; margin-top: 5px;">
+            <app-text-box name="degree"></app-text-box>
+            <app-text-box name="institution"></app-text-box>
+            <app-text-box name="duration"></app-text-box>
+            <app-text-box name="city"></app-text-box>
+            <app-text-box name="state"></app-text-box>
+            <app-text-box name="country"></app-text-box>
+          </form>
+          -----------------------
+        </ng-container>
+      </form>
+    </form>
+  </div>
+</div>
