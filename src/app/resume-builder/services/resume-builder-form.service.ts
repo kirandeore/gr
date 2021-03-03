@@ -70,7 +70,7 @@ export class ResumeBuilderFormService {
             city: 'Foster City',
             state: 'CA',
             country: 'United States',
-            description: '',
+            description: '<ul><li>Develop and execute Unit Tests and develop detailed software designs from requirements, working with other team members</li><li>Analyze and fix performance problems on the application</li><li>Participate in code reviews: verify maintainability, extensibility and assure complexity has been minimized</li></ul><p><br></p>',
         } as WorkExperience);
     }
 }

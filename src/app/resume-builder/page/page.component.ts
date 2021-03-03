@@ -1,14 +1,14 @@
-import { ResumeFormData } from "./../interfaces/resume-form-model";
-import { Form2HtmlService } from "./../services/form-2-html.service";
-import { AfterViewInit, Component, ElementRef, Input, OnInit } from "@angular/core";
-import { interval } from "rxjs";
-import { debounce, startWith } from "rxjs/operators";
-import { FormGroup } from "@angular/forms";
+import { ResumeFormData } from './../interfaces/resume-form-model';
+import { Form2HtmlService } from './../services/form-2-html.service';
+import { AfterViewInit, Component, ElementRef, Input, OnInit } from '@angular/core';
+import { interval } from 'rxjs';
+import { debounce, startWith } from 'rxjs/operators';
+import { FormGroup } from '@angular/forms';
 
 @Component({
-    selector: "app-page",
-    templateUrl: "./page.component.html",
-    styleUrls: ["./page.component.scss"],
+    selector: 'app-page',
+    templateUrl: './page.component.html',
+    styleUrls: ['./page.component.scss'],
 })
 export class PageComponent implements OnInit, AfterViewInit {
     @Input() form: FormGroup;
@@ -18,6 +18,7 @@ export class PageComponent implements OnInit, AfterViewInit {
     contentPlaceholders: NodeListOf<HTMLElement>;
     currentPlaceHolderIndex = 0;
     currentPlaceholder: HTMLElement;
+    currentSectionHeader: HTMLElement;
 
     constructor(public form2HtmlService: Form2HtmlService, private el: ElementRef) {}
 
@@ -33,19 +34,19 @@ export class PageComponent implements OnInit, AfterViewInit {
             )
             .subscribe((formValue: ResumeFormData) => {
                 this.clearNode(this.component);
+                this.currentSectionHeader = null;
 
-                let i = 0;
                 this.setupNewPage();
 
                 const elementArray: HTMLElement[] = [];
                 const formElements: HTMLElement[] = this.form2HtmlService.convertForm2HTML(formValue);
                 elementArray.push(...formElements);
 
-                for (i = 0; i < elementArray.length; i++) {
-                    switch (elementArray[i].tagName.toLowerCase()) {
-                        case "ul":
-                        case "ol":
-                            const ulTag = elementArray[i];
+                elementArray.forEach((ele) => {
+                    switch (ele.tagName.toLowerCase()) {
+                        case 'ul':
+                        case 'ol':
+                            const ulTag = ele;
                             const liTags: HTMLElement[] = Array.from(ulTag.children) as HTMLElement[];
                             let ulClone: HTMLElement = ulTag.cloneNode() as HTMLElement;
 
@@ -66,14 +67,18 @@ export class PageComponent implements OnInit, AfterViewInit {
                                     ulClone.appendChild(liClone);
 
                                     this.currentPlaceholder.appendChild(ulClone);
+                                    // check if overflown
                                 }
 
                                 const wordTags: HTMLElement[] = Array.from(liTag.children) as HTMLElement[];
+
+                                let isSentenceInComplete = false;
 
                                 wordTags.forEach((wordTag) => {
                                     liClone.appendChild(wordTag);
 
                                     if (this.isContentOverflown) {
+                                        isSentenceInComplete = true;
                                         liClone.removeChild(wordTag);
 
                                         ulClone = ulTag.cloneNode() as HTMLElement;
@@ -84,27 +89,35 @@ export class PageComponent implements OnInit, AfterViewInit {
                                         // TODO: check spanArray[i] is not greater than any container, or else there will be infinite loop
                                         this.setNewCurrentPlaceholder();
 
+                                        liClone.style.listStyleType = 'none';
                                         this.currentPlaceholder.appendChild(ulClone);
+                                        // check if overflown
                                     }
                                 });
                             });
 
                             break;
                         default:
-                            this.currentPlaceholder.appendChild(elementArray[i]);
+                            if (ele.classList.contains('gr-section-header')) {
+                                this.currentSectionHeader = ele;
+                            }
+
+                            this.currentPlaceholder.appendChild(ele);
 
                             if (this.isContentOverflown) {
                                 // remove overflown content and reset counter
-                                this.currentPlaceholder.removeChild(elementArray[i]);
-                                i = i > 0 ? i-- : 0;
+                                this.currentPlaceholder.removeChild(ele);
 
                                 // TODO: check spanArray[i] is not greater than any container, or else there will be infinite loop
                                 this.setNewCurrentPlaceholder();
+
+                                this.currentPlaceholder.appendChild(ele);
+                                // check if overflown
                             }
 
                             break;
                     }
-                }
+                });
             });
     }
 
@@ -116,11 +129,16 @@ export class PageComponent implements OnInit, AfterViewInit {
             // no placeholder
             this.currentPlaceholder = this.contentPlaceholders[++this.currentPlaceHolderIndex];
         }
+
+        if (this.currentSectionHeader) {
+            this.currentPlaceholder.appendChild(this.currentSectionHeader.cloneNode(true));
+            // check if overflown
+        }
     }
 
     private setupNewPage() {
         this.page = this.createPage();
-        this.contentPlaceholders = this.page.querySelectorAll(".content-placeholder");
+        this.contentPlaceholders = this.page.querySelectorAll('.content-placeholder');
         this.component.appendChild(this.page);
         this.currentPlaceHolderIndex = 0;
         this.currentPlaceholder = this.contentPlaceholders[this.currentPlaceHolderIndex];
@@ -154,7 +172,7 @@ export class PageComponent implements OnInit, AfterViewInit {
     </div>
     `;
 
-        const htmlDoc: Document = new DOMParser().parseFromString(xmlString, "text/html");
+        const htmlDoc: Document = new DOMParser().parseFromString(xmlString, 'text/html');
 
         return htmlDoc.documentElement;
     }
