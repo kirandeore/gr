@@ -26,7 +26,8 @@ export class Form2HtmlService {
     }
 
     private createWorkResponsibilites(description: String): HTMLElement[] {
-        const responsibilitiesContainer: HTMLElement = new DOMParser().parseFromString(description?.toString() || '', 'text/html').documentElement;
+        const responsibilitiesContainer: HTMLElement = new DOMParser()
+            .parseFromString(description?.toString() || '', 'text/html').documentElement;
         const immediateNodes: HTMLCollection = responsibilitiesContainer.querySelector('body')?.children;
 
         if (!immediateNodes) {

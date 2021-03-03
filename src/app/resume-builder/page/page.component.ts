@@ -18,6 +18,7 @@ export class PageComponent implements OnInit, AfterViewInit {
     contentPlaceholders: NodeListOf<HTMLElement>;
     currentPlaceHolderIndex = 0;
     currentPlaceholder: HTMLElement;
+    currentSectionHeader: HTMLElement;
 
     constructor(public form2HtmlService: Form2HtmlService, private el: ElementRef) {}
 
@@ -33,6 +34,7 @@ export class PageComponent implements OnInit, AfterViewInit {
             )
             .subscribe((formValue: ResumeFormData) => {
                 this.clearNode(this.component);
+                this.currentSectionHeader = null;
 
                 this.setupNewPage();
 
@@ -65,14 +67,18 @@ export class PageComponent implements OnInit, AfterViewInit {
                                     ulClone.appendChild(liClone);
 
                                     this.currentPlaceholder.appendChild(ulClone);
+                                    // check if overflown
                                 }
 
                                 const wordTags: HTMLElement[] = Array.from(liTag.children) as HTMLElement[];
+
+                                let isSentenceInComplete = false;
 
                                 wordTags.forEach((wordTag) => {
                                     liClone.appendChild(wordTag);
 
                                     if (this.isContentOverflown) {
+                                        isSentenceInComplete = true;
                                         liClone.removeChild(wordTag);
 
                                         ulClone = ulTag.cloneNode() as HTMLElement;
@@ -83,13 +89,19 @@ export class PageComponent implements OnInit, AfterViewInit {
                                         // TODO: check spanArray[i] is not greater than any container, or else there will be infinite loop
                                         this.setNewCurrentPlaceholder();
 
+                                        liClone.style.listStyleType = 'none';
                                         this.currentPlaceholder.appendChild(ulClone);
+                                        // check if overflown
                                     }
                                 });
                             });
 
                             break;
                         default:
+                            if (ele.classList.contains('gr-section-header')) {
+                                this.currentSectionHeader = ele;
+                            }
+
                             this.currentPlaceholder.appendChild(ele);
 
                             if (this.isContentOverflown) {
@@ -98,7 +110,9 @@ export class PageComponent implements OnInit, AfterViewInit {
 
                                 // TODO: check spanArray[i] is not greater than any container, or else there will be infinite loop
                                 this.setNewCurrentPlaceholder();
+
                                 this.currentPlaceholder.appendChild(ele);
+                                // check if overflown
                             }
 
                             break;
@@ -114,6 +128,11 @@ export class PageComponent implements OnInit, AfterViewInit {
         } else {
             // no placeholder
             this.currentPlaceholder = this.contentPlaceholders[++this.currentPlaceHolderIndex];
+        }
+
+        if (this.currentSectionHeader) {
+            this.currentPlaceholder.appendChild(this.currentSectionHeader.cloneNode(true));
+            // check if overflown
         }
     }
 
