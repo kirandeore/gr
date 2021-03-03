@@ -30,7 +30,7 @@ export class PageComponent implements OnInit, AfterViewInit {
         this.form.valueChanges
             .pipe(
                 startWith(this.form.value),
-                debounce(() => interval(500))
+                // debounce(() => interval(500))
             )
             .subscribe((formValue: ResumeFormData) => {
                 this.clearNode(this.component);

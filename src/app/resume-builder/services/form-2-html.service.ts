@@ -35,7 +35,7 @@ export class Form2HtmlService {
         }
 
         Array.from(immediateNodes).forEach((immediateNode: Element) => {
-            if (immediateNode.tagName.toLocaleLowerCase() === 'ul' || immediateNode.tagName.toLowerCase() === 'ol') {
+            if (['ul', 'ol'].includes(immediateNode.tagName.toLocaleLowerCase())) {
                 this.listTagToChunks(immediateNode as HTMLElement);
             }
         });
