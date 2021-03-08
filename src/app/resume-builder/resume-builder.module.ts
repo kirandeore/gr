@@ -8,9 +8,24 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { QuillModule } from 'ngx-quill';
 import { TextAreaComponent } from './text-area/text-area.component';
 import { TextBoxComponent } from './text-box/text-box.component';
+import { ResumeFillupFormComponent } from './resume-fillup-form/resume-fillup-form.component';
 
 @NgModule({
-    declarations: [ResumeBuilderComponent, PageComponent, TextAreaComponent, TextBoxComponent],
-    imports: [CommonModule, ResumeBuilderRoutingModule, FormsModule, ReactiveFormsModule, QuillModule.forRoot()],
+    declarations: [ResumeBuilderComponent, PageComponent, TextAreaComponent, TextBoxComponent, ResumeFillupFormComponent],
+    imports: [
+        CommonModule,
+        ResumeBuilderRoutingModule,
+        FormsModule,
+        ReactiveFormsModule,
+        QuillModule.forRoot({
+            modules: {
+                toolbar: [
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ list: 'ordered' }, { list: 'bullet' }],
+                    [{ 'align': [] }]
+                ],
+            },
+        }),
+    ],
 })
 export class ResumeBuilderModule {}

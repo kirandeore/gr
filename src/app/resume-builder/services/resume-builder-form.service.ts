@@ -38,12 +38,12 @@ export class ResumeBuilderFormService {
     }
 
     addNewEducation() {
-        const credentials: FormArray = <FormArray>this.eduParentForm.get('credentials');
+        const credentials: FormArray = this.eduParentForm.get('credentials') as FormArray;
         credentials.push(this.createEducationForm());
     }
 
     addNewWorkExperience() {
-        const workExps: FormArray = <FormArray>this.workExpParentForm.get('workExps');
+        const workExps: FormArray = this.workExpParentForm.get('workExps') as FormArray;
         workExps.push(this.createWorkExpForm());
     }
 
@@ -70,7 +70,8 @@ export class ResumeBuilderFormService {
             city: 'Foster City',
             state: 'CA',
             country: 'United States',
-            description: '<ul><li>Develop and execute Unit Tests and develop detailed software designs from requirements, working with other team members</li><li>Analyze and fix performance problems on the application</li><li>Participate in code reviews: verify maintainability, extensibility and assure complexity has been minimized</li></ul><p><br></p>',
+            description: ''
+                // '<ul><li>Develop and execute Unit Tests and develop detailed software designs from requirements, working with other team members</li><li>Analyze and fix performance problems on the application</li><li>Participate in code reviews: verify maintainability, extensibility and assure complexity has been minimized</li></ul>',
         } as WorkExperience);
     }
 }

@@ -11,6 +11,11 @@ import { FormGroup } from '@angular/forms';
     styleUrls: ['./page.component.scss'],
 })
 export class PageComponent implements OnInit, AfterViewInit {
+    constructor(public form2HtmlService: Form2HtmlService, private el: ElementRef) {}
+
+    private get isContentOverflown(): boolean {
+        return this.isOverflown(this.currentPlaceholder);
+    }
     @Input() form: FormGroup;
 
     page: HTMLElement;
@@ -20,7 +25,85 @@ export class PageComponent implements OnInit, AfterViewInit {
     currentPlaceholder: HTMLElement;
     currentSectionHeader: HTMLElement;
 
-    constructor(public form2HtmlService: Form2HtmlService, private el: ElementRef) {}
+    // currentNode: HTMLElement;
+    currentNodeIndex = 0;
+    elementArray: HTMLElement[] = [];
+    currentUl: HTMLElement;
+    currentLIs: HTMLElement[];
+    liToAdd: HTMLElement;
+    // currentLIindex: 0;
+
+    observer = new MutationObserver((mutationsList, observer) => {
+        setTimeout(() => {
+            // Use traditional 'for loops' for IE 11
+            for (const mutation of mutationsList) {
+                if (mutation.type === 'childList') {
+                    if (mutation.removedNodes.length) {
+                        // return;
+                    } else {
+                        if (this.currentLIs?.length) {
+                            // debugger;
+                            if (this.isOverflown(this.currentPlaceholder as HTMLElement)) {
+                                // debugger;
+                                this.currentUl.removeChild(this.liToAdd);
+                                this.setNewCurrentPlaceholder();
+                                this.currentUl = this.currentUl.cloneNode() as HTMLElement;
+                                this.currentUl.appendChild(this.liToAdd);
+                                this.currentPlaceholder.append(this.currentUl);
+                                // this.liToAdd = this.currentLIs.shift();
+                            } else {
+                                if (this.currentLIs?.length) {
+                                    this.liToAdd = this.currentLIs.shift();
+                                    this.currentUl.appendChild(this.liToAdd);
+                                }
+                                // this.currentPlaceholder.append(this.currentUl);
+                            }
+
+                            return;
+                        }
+
+                        if (this.isOverflown(mutation.target as HTMLElement)) {
+                            // debugger;
+                            const ch = mutation.addedNodes[0];
+                            this.currentPlaceholder.removeChild(ch);
+                            this.setNewCurrentPlaceholder();
+                            this.currentPlaceholder.append(ch);
+                        } else {
+                            ++this.currentNodeIndex;
+                            // debugger;
+                            if (!this.elementArray[this.currentNodeIndex]) {
+                                // end
+                                return;
+                            }
+
+                            const nodeToAdd: HTMLElement = this.elementArray[this.currentNodeIndex];
+
+                            switch (nodeToAdd.tagName) {
+                                case 'UL':
+                                case 'OL':
+                                    this.currentUl = nodeToAdd.cloneNode() as HTMLElement;
+                                    this.currentLIs = Array.from(nodeToAdd.children) as HTMLElement[];
+
+                                    if (this.currentLIs?.length) {
+                                        this.liToAdd = this.currentLIs.shift();
+                                        this.currentUl.appendChild(this.liToAdd);
+                                        this.currentPlaceholder.append(this.currentUl);
+                                    }
+                                    break;
+                                default:
+                                    // mutation.target.appendChild(this.elementArray[this.currentNodeIndex]);
+                                    this.currentPlaceholder.append(this.elementArray[this.currentNodeIndex]);
+                                    break;
+                            }
+                        }
+                        console.log('A child node has been added or removed.');
+                    }
+
+                    // break;
+                }
+            }
+        });
+    });
 
     ngOnInit(): void {}
 
@@ -30,92 +113,30 @@ export class PageComponent implements OnInit, AfterViewInit {
         this.form.valueChanges
             .pipe(
                 startWith(this.form.value),
-                // debounce(() => interval(500))
+                debounce(() => interval(200))
             )
             .subscribe((formValue: ResumeFormData) => {
-                this.clearNode(this.component);
-                this.currentSectionHeader = null;
+                setTimeout(() => {
+                    console.log(':::: formValue has changed');
+                    this.clearNode(this.component);
+                    this.currentSectionHeader = null;
+                    this.elementArray = [];
+                    this.currentNodeIndex = 0;
 
-                this.setupNewPage();
+                    this.currentUl = null;
+                    this.currentLIs = null;
+                    // this.currentLIindex = 0;
+                    this.liToAdd = null;
 
-                const elementArray: HTMLElement[] = [];
-                const formElements: HTMLElement[] = this.form2HtmlService.convertForm2HTML(formValue);
-                elementArray.push(...formElements);
+                    this.setupNewPage();
 
-                elementArray.forEach((ele) => {
-                    switch (ele.tagName.toLowerCase()) {
-                        case 'ul':
-                        case 'ol':
-                            const ulTag = ele;
-                            const liTags: HTMLElement[] = Array.from(ulTag.children) as HTMLElement[];
-                            let ulClone: HTMLElement = ulTag.cloneNode() as HTMLElement;
+                    console.log(':::: convertForm2HTML started');
+                    const formElements: HTMLElement[] = this.form2HtmlService.convertForm2HTML(formValue);
+                    console.log(':::: convertForm2HTML ended');
+                    this.elementArray.push(...formElements);
 
-                            liTags.forEach((liTag) => {
-                                let liClone: HTMLElement = liTag.cloneNode() as HTMLElement;
-                                ulClone.appendChild(liClone);
-
-                                this.currentPlaceholder.appendChild(ulClone);
-
-                                // if dot is overflown
-                                if (this.isContentOverflown) {
-                                    ulClone.removeChild(liClone);
-
-                                    // TODO: check spanArray[i] is not greater than any container, or else there will be infinite loop
-                                    this.setNewCurrentPlaceholder();
-
-                                    ulClone = ulTag.cloneNode() as HTMLElement;
-                                    ulClone.appendChild(liClone);
-
-                                    this.currentPlaceholder.appendChild(ulClone);
-                                    // check if overflown
-                                }
-
-                                const wordTags: HTMLElement[] = Array.from(liTag.children) as HTMLElement[];
-
-                                let isSentenceInComplete = false;
-
-                                wordTags.forEach((wordTag) => {
-                                    liClone.appendChild(wordTag);
-
-                                    if (this.isContentOverflown) {
-                                        isSentenceInComplete = true;
-                                        liClone.removeChild(wordTag);
-
-                                        ulClone = ulTag.cloneNode() as HTMLElement;
-                                        liClone = liTag.cloneNode() as HTMLElement;
-                                        ulClone.appendChild(liClone);
-                                        liClone.appendChild(wordTag);
-
-                                        // TODO: check spanArray[i] is not greater than any container, or else there will be infinite loop
-                                        this.setNewCurrentPlaceholder();
-
-                                        liClone.style.listStyleType = 'none';
-                                        this.currentPlaceholder.appendChild(ulClone);
-                                        // check if overflown
-                                    }
-                                });
-                            });
-
-                            break;
-                        default:
-                            if (ele.classList.contains('gr-section-header')) {
-                                this.currentSectionHeader = ele;
-                            }
-
-                            this.currentPlaceholder.appendChild(ele);
-
-                            if (this.isContentOverflown) {
-                                // remove overflown content and reset counter
-                                this.currentPlaceholder.removeChild(ele);
-
-                                // TODO: check spanArray[i] is not greater than any container, or else there will be infinite loop
-                                this.setNewCurrentPlaceholder();
-
-                                this.currentPlaceholder.appendChild(ele);
-                                // check if overflown
-                            }
-
-                            break;
+                    if (this.elementArray?.length) {
+                        this.currentPlaceholder.appendChild(this.elementArray[this.currentNodeIndex]);
                     }
                 });
             });
@@ -139,13 +160,18 @@ export class PageComponent implements OnInit, AfterViewInit {
     private setupNewPage() {
         this.page = this.createPage();
         this.contentPlaceholders = this.page.querySelectorAll('.content-placeholder');
-        this.component.appendChild(this.page);
+        this.component.prepend(this.page); //.appendChild(this.page);
         this.currentPlaceHolderIndex = 0;
         this.currentPlaceholder = this.contentPlaceholders[this.currentPlaceHolderIndex];
-    }
 
-    private get isContentOverflown(): boolean {
-        return this.isOverflown(this.currentPlaceholder);
+        this.contentPlaceholders.forEach((targetNode) => {
+            this.observer.observe(targetNode, {
+                characterData: true,
+                attributes: false,
+                childList: true,
+                subtree: true,
+            });
+        });
     }
 
     private isOverflown({ clientWidth, clientHeight, scrollWidth, scrollHeight }): boolean {
